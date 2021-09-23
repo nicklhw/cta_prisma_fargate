@@ -4,9 +4,9 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 3.0"
     }
-    restapi = {
-      source  = "fmontezuma/restapi"
-      version = "1.14.1"
+    random = {
+      source = "hashicorp/random"
+      version = "3.1.0"
     }
   }
 }
@@ -48,10 +48,19 @@ resource "aws_ecs_task_definition" "service-testing" {
   container_definitions = jsonencode(local.defs)
 }
 
+resource "random_string" "random" {
+  length           = 16
+  special          = true
+  override_special = "/@£$"
+}
+
 # github reference https://github.com/hashicorp/terraform/issues/20971
+# https://discuss.hashicorp.com/t/how-to-retrieve-the-null-resource-returned-value/9620/3
+# https://discuss.hashicorp.com/t/using-null-resource-and-external-data-source-together/27120
 resource "null_resource" "prisma_api" {
     triggers = {
-      filename = "res.txt"
+      always_run = "${timestamp()}"
+      filename = "${path.module}/${random_string.random.result}.txt"
     }
 
   provisioner "local-exec" {

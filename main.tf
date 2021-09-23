@@ -11,18 +11,6 @@ terraform {
   }
 }
 
-variable "prisma_path" {
-    type = string
-    default = "/api/v1/defenders/fargate.json?consoleaddr=northamerica-northeast1.cloud.twistlock.com/canada-550157779&defenderType=appEmbedded"
-}
-
-provider "restapi" {
-  # Configuration options
-  uri                  = "http://127.0.0.1:4545"
-  debug                = true
-  write_returns_object = true
-}
-
 provider "aws" {
   region = "us-east-1"
 }
@@ -49,8 +37,8 @@ locals {
         }
       ]
     },
-    # add additional container from the module
-    jsondecode(restapi_object.service-second.api_response)
+    #add additional container from the module
+    jsondecode(data.local_file.test.content)
   ]
 }
 
@@ -60,17 +48,36 @@ resource "aws_ecs_task_definition" "service-testing" {
   container_definitions = jsonencode(local.defs)
 }
 
-resource "restapi_object" "service-second" {
-  path        = var.prisma_path
-  read_path   = var.prisma_path
-  read_method = "POST"
-  destroy_path = var.prisma_path
-  destroy_method = "POST"
-  data        = "{ \"containerDefinitions\": \"some task\" }"
-  object_id   = "service-second"
-  debug       = true
+# github reference https://github.com/hashicorp/terraform/issues/20971
+resource "null_resource" "prisma_api" {
+    triggers = {
+      filename = "res.txt"
+    }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      curl -X POST 'http://127.0.0.1:4545/api/v1/defenders/fargate.json?consoleaddr=northamerica-northeast1.cloud.twistlock.com/canada-550157779&defenderType=appEmbedded' \
+           -H 'Content-Type: application/json' \
+           -u '${var.api_user}:${var.api_user_passwd}' \
+           -d '{"containerDefinitions": "some task" }' > ${self.triggers.filename}
+    EOT
+  }
 }
 
-output "tasdef1" {
-  value = restapi_object.service-second.api_response
+data "local_file" "test" {
+  filename = "${null_resource.prisma_api.triggers.filename}"
+}
+
+output "prisma_api_response" {
+  value = "${data.local_file.test.content}"
+}
+
+variable "api_user" {
+  type = string
+  sensitive = true
+}
+
+variable "api_user_passwd" {
+  type = string
+  sensitive = true
 }

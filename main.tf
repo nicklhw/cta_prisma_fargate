@@ -59,6 +59,7 @@ resource "random_string" "random" {
 # https://discuss.hashicorp.com/t/using-null-resource-and-external-data-source-together/27120
 resource "null_resource" "prisma_api" {
     triggers = {
+      # timestamp function here to always trigger the execution of the curl on each apply
       always_run = "${timestamp()}"
       filename = "${path.module}/${random_string.random.result}.txt"
     }

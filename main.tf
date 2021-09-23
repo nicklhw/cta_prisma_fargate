@@ -61,7 +61,7 @@ resource "null_resource" "prisma_api" {
     triggers = {
       # timestamp function here to always trigger the execution of the curl on each apply
       always_run = "${timestamp()}"
-      filename = "${path.module}/${random_string.random.result}.txt"
+      filename = "${path.module}/${random_string.random.result}.json"
     }
 
   provisioner "local-exec" {

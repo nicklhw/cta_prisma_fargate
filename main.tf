@@ -15,9 +15,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "name" {
-  type    = string
-  default = "second"
+variable "api_user" {
+  type = string
+  sensitive = true
+}
+
+variable "api_user_passwd" {
+  type = string
+  sensitive = true
 }
 
 
@@ -51,7 +56,7 @@ resource "aws_ecs_task_definition" "service-testing" {
 resource "random_string" "random" {
   length           = 16
   special          = true
-  override_special = "/@£$"
+  override_special = "@£$"
 }
 
 # github reference https://github.com/hashicorp/terraform/issues/20971
@@ -82,12 +87,3 @@ output "prisma_api_response" {
   value = "${data.local_file.test.content}"
 }
 
-variable "api_user" {
-  type = string
-  sensitive = true
-}
-
-variable "api_user_passwd" {
-  type = string
-  sensitive = true
-}

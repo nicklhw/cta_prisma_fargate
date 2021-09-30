@@ -52,7 +52,7 @@ resource "aws_ecs_task_definition" "service-testing" {
   family                = "service-testing"
   container_definitions = jsonencode(local.defs)
 
-  # clean up local file container the prima cloud API response after task def is created
+  # clean up local file containing the prisma cloud API response after task def is created
   provisioner "local-exec" {
     command = <<EOT
       rm ${path.module}/${null_resource.prisma_api.triggers.filename}
